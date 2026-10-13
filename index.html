@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS Quest & Activity Challenge - Participant Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body {
+            background: linear-gradient(135deg, #1f4068, #162447, #1b1b2f);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: #f0f0f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .container { max-width: 950px; margin: 0 auto; background: rgba(22, 36, 71, 0.85); backdrop-filter: blur(10px); border-radius: 16px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        h1, h2, h3 { color: #e43f5a; margin-bottom: 15px; }
+        p { line-height: 1.6; margin-bottom: 15px; color: #d0d0d0; }
+        .hidden { display: none !important; }
+        .btn { background: #e43f5a; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 8px; cursor: pointer; transition: 0.3s; font-weight: bold; margin-top: 10px; }
+        .btn:hover { background: #d02c48; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(228, 63, 90, 0.4); }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #a5dff9; }
+        .form-group input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #30475e; background: #0f172a; color: white; font-size: 16px; }
+        .timer-bar { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 10px 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #30475e; }
+        .module-card { background: rgba(15, 23, 42, 0.6); border: 1px solid #30475e; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .match-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px; align-items: center; }
+        .match-row select { padding: 10px; border-radius: 6px; background: #0f172a; color: white; border: 1px solid #30475e; }
+        code { background: #0f172a; padding: 12px; display: block; border-radius: 6px; border-left: 4px solid #e43f5a; font-family: monospace; margin: 10px 0; white-space: pre-wrap; color: #a5dff9; }
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .option-btn { background: #1b2a47; border: 1px solid #30475e; padding: 10px; border-radius: 6px; color: white; cursor: pointer; text-align: left; transition: 0.2s; font-size: 14px; }
+        .option-btn:hover { background: #30475e; }
+        .option-btn.selected { background: #e43f5a; border-color: #e43f5a; font-weight: bold; }
+        
+        /* 5x5 Graphical OS Logo Slide Puzzle */
+        .puzzle-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .os-selector { display: flex; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; justify-content: center; }
+        .os-sel-btn { background: #1b2a47; border: 1px solid #30475e; padding: 8px 14px; border-radius: 6px; color: white; cursor: pointer; font-size: 14px; }
+        .os-sel-btn.active { background: #38bdf8; color: #0f172a; font-weight: bold; border-color: #38bdf8; }
+        .puzzle-preview { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #94a3b8; margin-bottom: 5px; }
+        .preview-thumb { width: 45px; height: 45px; background-size: cover; border-radius: 4px; border: 1px solid #38bdf8; }
+        .puzzle-board { display: grid; grid-template-columns: repeat(5, 55px); grid-template-rows: repeat(5, 55px); gap: 2px; background: #0f172a; padding: 6px; border-radius: 8px; border: 2px solid #30475e; }
+        .puzzle-tile { 
+            width: 55px; height: 55px; 
+            background-size: 275px 275px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            transition: transform 0.1s; 
+        }
+        .puzzle-tile:hover { opacity: 0.9; }
+        .puzzle-tile.empty { background: #0f172a !important; cursor: default; border: 1px dashed #30475e; }
+    </style>
+</head>
+<body>
+
+<div class="container" id="reg-screen">
+    <h2>CS Quest & Activity Challenge</h2>
+    <p>Welcome participant! Please enter your official details to begin. <strong>Warning:</strong> Switching browser tabs or windows during the activity will instantly terminate your session and disqualify you.</p>
+    <div class="form-group">
+        <label for="p-name">Full Name</label>
+        <input type="text" id="p-name" placeholder="Enter your full name">
+    </div>
+    <div class="form-group">
+        <label for="p-reg">College Register Number</label>
+        <input type="text" id="p-reg" placeholder="Enter your college register number">
+    </div>
+    <button class="btn" onclick="startChallenge()">Start Activity Now</button>
+</div>
+
+<div class="container hidden" id="game-screen">
+    <div class="timer-bar">
+        <div>Participant: <span id="disp-name" style="color:#a5dff9; font-weight:bold;"></span></div>
+        <div>Time Left: <span id="timer" style="color:#e43f5a; font-weight:bold;">30:00</span></div>
+    </div>
+
+    <!-- MODULE 1: Match the Following (DBMS Types - 5 Items) -->
+    <div class="module-card">
+        <h3>1. Match the Following: Types of Databases in DBMS</h3>
+        <p>Match each DBMS category with its correct architectural definition or example.</p>
+        <div class="match-row">
+            <span>1. Relational DBMS (RDBMS)</span>
+            <select id="m1">
+                <option value="">-- Select Match --</option>
+                <option value="A">Stores unstructured documents and JSON collections (e.g., MongoDB)</option>
+                <option value="B">Stores data in tables with rows and columns enforcing ACID properties (e.g., PostgreSQL)</option>
+                <option value="C">Optimized for high-speed graph traversals and relationship links (e.g., Neo4j)</option>
+                <option value="D">Stores key-value pairs in high-performance memory cache (e.g., Redis)</option>
+                <option value="E">Uses column-oriented storage tuned for fast analytical queries (e.g., Apache Cassandra)</option>
+            </select>
+        </div>
+        <div class="match-row">
+            <span>2. NoSQL Document Database</span>
+            <select id="m2">
+                <option value="">-- Select Match --</option>
+                <option value="A">Stores unstructured documents and JSON collections (e.g., MongoDB)</option>
+                <option value="B">Stores data in tables with rows and columns enforcing ACID properties (e.g., PostgreSQL)</option>
+                <option value="C">Optimized for high-speed graph traversals and relationship links (e.g., Neo4j)</option>
+                <option value="D">Stores key-value pairs in high-performance memory cache (e.g., Redis)</option>
+                <option value="E">Uses column-oriented storage tuned for fast analytical queries (e.g., Apache Cassandra)</option>
+            </select>
+        </div>
+        <div class="match-row">
+            <span>3. Graph Database</span>
+            <select id="m3">
+                <option value="">-- Select Match --</option>
+                <option value="A">Stores unstructured documents and JSON collections (e.g., MongoDB)</option>
+                <option value="B">Stores data in tables with rows and columns enforcing ACID properties (e.g., PostgreSQL)</option>
+                <option value="C">Optimized for high-speed graph traversals and relationship links (e.g., Neo4j)</option>
+                <option value="D">Stores key-value pairs in high-performance memory cache (e.g., Redis)</option>
+                <option value="E">Uses column-oriented storage tuned for fast analytical queries (e.g., Apache Cassandra)</option>
+            </select>
+        </div>
+        <div class="match-row">
+            <span>4. In-Memory Key-Value Store</span>
+            <select id="m4">
+                <option value="">-- Select Match --</option>
+                <option value="A">Stores unstructured documents and JSON collections (e.g., MongoDB)</option>
+                <option value="B">Stores data in tables with rows and columns enforcing ACID properties (e.g., PostgreSQL)</option>
+                <option value="C">Optimized for high-speed graph traversals and relationship links (e.g., Neo4j)</option>
+                <option value="D">Stores key-value pairs in high-performance memory cache (e.g., Redis)</option>
+                <option value="E">Uses column-oriented storage tuned for fast analytical queries (e.g., Apache Cassandra)</option>
+            </select>
+        </div>
+        <div class="match-row">
+            <span>5. Wide-Column Distributed Store</span>
+            <select id="m5">
+                <option value="">-- Select Match --</option>
+                <option value="A">Stores unstructured documents and JSON collections (e.g., MongoDB)</option>
+                <option value="B">Stores data in tables with rows and columns enforcing ACID properties (e.g., PostgreSQL)</option>
+                <option value="C">Optimized for high-speed graph traversals and relationship links (e.g., Neo4j)</option>
+                <option value="D">Stores key-value pairs in high-performance memory cache (e.g., Redis)</option>
+                <option value="E">Uses column-oriented storage tuned for fast analytical queries (e.g., Apache Cassandra)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- MODULE 2: C Error Detection (5 Questions) -->
+    <div class="module-card">
+        <h3>2. Error Detection in C Programming (Set of 5)</h3>
+        
+        <p><strong>Q1:</strong> What error exists in this snippet?</p>
+        <code>int main() {
+    int ptr = 10;
+    printf("%d", *ptr);
+    return 0;
+}</code>
+        <div class="options-grid" id="c1-opts">
+            <button class="option-btn" onclick="selectOption('c1', 'A', this)">A) Missing semicolon after return statement</button>
+            <button class="option-btn" onclick="selectOption('c1', 'B', this)">B) Dereferencing an integer variable 'ptr' which is not a pointer type</button>
+            <button class="option-btn" onclick="selectOption('c1', 'C', this)">C) Invalid format specifier %d used for floating point</button>
+            <button class="option-btn" onclick="selectOption('c1', 'D', this)">D) Undeclared standard library header file</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q2:</strong> What error exists in this array snippet?</p>
+        <code>int main() {
+    int arr[3] = {1, 2, 3};
+    printf("%d", arr[5]);
+    return 0;
+}</code>
+        <div class="options-grid" id="c2-opts">
+            <button class="option-btn" onclick="selectOption('c2', 'A', this)">A) Compile error due to array initialization size</button>
+            <button class="option-btn" onclick="selectOption('c2', 'B', this)">B) Undefined behavior / out-of-bounds array index access (arr[5])</button>
+            <button class="option-btn" onclick="selectOption('c2', 'C', this)">C) Pointer arithmetic mismatch in printf</button>
+            <button class="option-btn" onclick="selectOption('c2', 'D', this)">D) Missing main function return type</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q3:</strong> What error exists in this function snippet?</p>
+        <code>int* create() {
+    int x = 42;
+    return &x;
+}</code>
+        <div class="options-grid" id="c3-opts">
+            <button class="option-btn" onclick="selectOption('c3', 'A', this)">A) Returning address of a local automatic stack variable whose scope expires</button>
+            <button class="option-btn" onclick="selectOption('c3', 'B', this)">C) Missing parameter declaration in parentheses</button>
+            <button class="option-btn" onclick="selectOption('c3', 'C', this)">C) Invalid function return type annotation</button>
+            <button class="option-btn" onclick="selectOption('c3', 'D', this)">D) Infinite recursion loop</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q4:</strong> What error exists in this string copy snippet?</p>
+        <code>#include &lt;string.h&gt;
+int main() {
+    char *str;
+    strcpy(str, "Hello");
+    return 0;
+}</code>
+        <div class="options-grid" id="c4-opts">
+            <button class="option-btn" onclick="selectOption('c4', 'A', this)">A) Missing null terminator character</button>
+            <button class="option-btn" onclick="selectOption('c4', 'B', this)">B) Uninitialized pointer 'str' points to random memory, causing segmentation fault</button>
+            <button class="option-btn" onclick="selectOption('c4', 'C', this)">C) Incorrect string.h header inclusion</button>
+            <button class="option-btn" onclick="selectOption('c4', 'D', this)">D) strcpy is deprecated in all compilers</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q5:</strong> What error exists in this macro definition?</p>
+        <code>#define SQUARE(x) x * x
+int main() {
+    int res = SQUARE(1 + 2);
+    return 0;
+}</code>
+        <div class="options-grid" id="c5-opts">
+            <button class="option-btn" onclick="selectOption('c5', 'A', this)">A) Macro expansion expands to 1 + 2 * 1 + 2 due to lack of parentheses around parameters</button>
+            <button class="option-btn" onclick="selectOption('c5', 'B', this)">B) Macros cannot accept arithmetic expressions</button>
+            <button class="option-btn" onclick="selectOption('c5', 'C', this)">C) Missing semicolon after macro definition</button>
+            <button class="option-btn" onclick="selectOption('c5', 'D', this)">D) Redefinition of standard library function</button>
+        </div>
+    </div>
+
+    <!-- MODULE 3: OS Guessing (5 Questions) -->
+    <div class="module-card">
+        <h3>3. Operating System Guessing by Clues (Set of 5)</h3>
+        
+        <p><strong>Clue 1:</strong> A Unix-like open-source operating system kernel created by Linus Torvalds in 1991, powering most cloud servers and supercomputers.</p>
+        <div class="options-grid" id="os1-opts">
+            <button class="option-btn" onclick="selectOption('os1', 'Windows', this)">Microsoft Windows</button>
+            <button class="option-btn" onclick="selectOption('os1', 'Linux', this)">Linux Kernel / Ubuntu</button>
+            <button class="option-btn" onclick="selectOption('os1', 'macOS', this)">Apple macOS</button>
+            <button class="option-btn" onclick="selectOption('os1', 'Android', this)">Google Android</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Clue 2:</strong> A proprietary graphical operating system developed by Microsoft, dominant in personal desktop computing worldwide.</p>
+        <div class="options-grid" id="os2-opts">
+            <button class="option-btn" onclick="selectOption('os2', 'Windows', this)">Microsoft Windows 11</button>
+            <button class="option-btn" onclick="selectOption('os2', 'Linux', this)">Linux Mint</button>
+            <button class="option-btn" onclick="selectOption('os2', 'macOS', this)">Apple macOS Sonoma</button>
+            <button class="option-btn" onclick="selectOption('os2', 'FreeBSD', this)">FreeBSD</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Clue 3:</strong> A Unix-based operating system designed by Apple Inc. exclusively for Macintosh hardware lines.</p>
+        <div class="options-grid" id="os3-opts">
+            <button class="option-btn" onclick="selectOption('os3', 'Windows', this)">Microsoft Windows</button>
+            <button class="option-btn" onclick="selectOption('os3', 'macOS', this)">Apple macOS</button>
+            <button class="option-btn" onclick="selectOption('os3', 'Ubuntu', this)">Ubuntu Linux</button>
+            <button class="option-btn" onclick="selectOption('os3', 'Solaris', this)">Oracle Solaris</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Clue 4:</strong> A mobile operating system based on a modified version of the Linux kernel, developed by Google primarily for touchscreen smartphones and tablets.</p>
+        <div class="options-grid" id="os4-opts">
+            <button class="option-btn" onclick="selectOption('os4', 'iOS', this)">Apple iOS</button>
+            <button class="option-btn" onclick="selectOption('os4', 'Android', this)">Google Android</button>
+            <button class="option-btn" onclick="selectOption('os4', 'WindowsMobile', this)">Windows Mobile</button>
+            <button class="option-btn" onclick="selectOption('os4', 'Symbian', this)">Symbian OS</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Clue 5:</strong> A secure, robust Unix operating system derived from the Berkeley Software Distribution (BSD), renowned for advanced networking and ZFS filesystem integration.</p>
+        <div class="options-grid" id="os5-opts">
+            <button class="option-btn" onclick="selectOption('os5', 'FreeBSD', this)">FreeBSD</button>
+            <button class="option-btn" onclick="selectOption('os5', 'WindowsServer', this)">Windows Server</button>
+            <button class="option-btn" onclick="selectOption('os5', 'Fedora', this)">Fedora Linux</button>
+            <button class="option-btn" onclick="selectOption('os5', 'ChromeOS', this)">ChromeOS</button>
+        </div>
+    </div>
+
+    <!-- MODULE 4: DBMS Full Forms & Terminology (5 Questions) -->
+    <div class="module-card">
+        <h3>4. DBMS Full Forms & Terminology (Set of 5)</h3>
+        
+        <p><strong>Q1:</strong> What does <strong>ACID</strong> stand for in transaction processing?</p>
+        <div class="options-grid" id="db1-opts">
+            <button class="option-btn" onclick="selectOption('db1', 'A', this)">A) Atomicity, Consistency, Isolation, Durability</button>
+            <button class="option-btn" onclick="selectOption('db1', 'B', this)">B) Association, Concurrency, Indexing, Distribution</button>
+            <button class="option-btn" onclick="selectOption('db1', 'C', this)">C) Allocation, Control, Integrity, Dependency</button>
+            <button class="option-btn" onclick="selectOption('db1', 'D', this)">D) Authentication, Cipher, Isolation, Data</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q2:</strong> What does <strong>BCNF</strong> stand for in database normalization theory?</p>
+        <div class="options-grid" id="db2-opts">
+            <button class="option-btn" onclick="selectOption('db2', 'A', this)">A) Boyce-Codd Normal Form</button>
+            <button class="option-btn" onclick="selectOption('db2', 'B', this)">B) Binary Column Normal Form</button>
+            <button class="option-btn" onclick="selectOption('db2', 'C', this)">C) Basic Clustering Normal Framework</button>
+            <button class="option-btn" onclick="selectOption('db2', 'D', this)">D) Balanced Control Nested File</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q3:</strong> What does <strong>DDL</strong> stand for in SQL command categories?</p>
+        <div class="options-grid" id="db3-opts">
+            <button class="option-btn" onclick="selectOption('db3', 'A', this)">A) Data Definition Language</button>
+            <button class="option-btn" onclick="selectOption('db3', 'B', this)">B) Dynamic Data Link</button>
+            <button class="option-btn" onclick="selectOption('db3', 'C', this)">C) Distributed Database Layer</button>
+            <button class="option-btn" onclick="selectOption('db3', 'D', this)">D) Data Dependency Logic</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q4:</strong> What does <strong>MVCC</strong> stand for in modern concurrency control systems?</p>
+        <div class="options-grid" id="db4-opts">
+            <button class="option-btn" onclick="selectOption('db4', 'A', this)">A) Multi-Version Concurrency Control</button>
+            <button class="option-btn" onclick="selectOption('db4', 'B', this)">B) Main Value Cache Consistency</button>
+            <button class="option-btn" onclick="selectOption('db4', 'C', this)">C) Master Validation Column Cluster</button>
+            <button class="option-btn" onclick="selectOption('db4', 'D', this)">D) Multi-View Cross Compilation</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q5:</strong> What does <strong>SQL</strong> stand for?</p>
+        <div class="options-grid" id="db5-opts">
+            <button class="option-btn" onclick="selectOption('db5', 'A', this)">A) Structured Query Language</button>
+            <button class="option-btn" onclick="selectOption('db5', 'B', this)">B) Simple Query Logic</button>
+            <button class="option-btn" onclick="selectOption('db5', 'C', this)">C) Sequential Quotient Language</button>
+            <button class="option-btn" onclick="selectOption('db5', 'D', this)">D) System Quality Link</button>
+        </div>
+    </div>
+
+    <!-- MODULE 5: OOPs & DS in C (5 Questions) -->
+    <div class="module-card">
+        <h3>5. OOPs & Data Structures Concepts in C Programming (Set of 5)</h3>
+        
+        <p><strong>Q1:</strong> How can you simulate object encapsulation and data hiding in standard C?</p>
+        <div class="options-grid" id="oop1-opts">
+            <button class="option-btn" onclick="selectOption('oop1', 'A', this)">A) By declaring all variables global</button>
+            <button class="option-btn" onclick="selectOption('oop1', 'B', this)">B) By using opaque pointer types in header files and binding function pointers inside struct definitions</button>
+            <button class="option-btn" onclick="selectOption('oop1', 'C', this)">C) C language does not support any data structures</button>
+            <button class="option-btn" onclick="selectOption('oop1', 'D', this)">D) Using goto statements</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q2:</strong> How can polymorphism and virtual method tables (vtables) be simulated in C?</p>
+        <div class="options-grid" id="oop2-opts">
+            <button class="option-btn" onclick="selectOption('oop2', 'A', this)">A) By embedding function pointer tables (struct of function pointers) within base struct definitions</button>
+            <button class="option-btn" onclick="selectOption('oop2', 'B', this)">B) By overloading function names directly</button>
+            <button class="option-btn" onclick="selectOption('oop2', 'C', this)">C) Using preprocessor directives #pragma</button>
+            <button class="option-btn" onclick="selectOption('oop2', 'D', this)">D) Polymorphism is impossible in C</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q3:</strong> Which data structure uses FIFO (First In, First Out) ordering for processing elements?</p>
+        <div class="options-grid" id="oop3-opts">
+            <button class="option-btn" onclick="selectOption('oop3', 'A', this)">A) Stack</button>
+            <button class="option-btn" onclick="selectOption('oop3', 'B', this)">B) Queue</button>
+            <button class="option-btn" onclick="selectOption('oop3', 'C', this)">C) Binary Tree</button>
+            <button class="option-btn" onclick="selectOption('oop3', 'D', this)">D) Min-Heap</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q4:</strong> What is the average time complexity for searching a key in a well-balanced Hash Table?</p>
+        <div class="options-grid" id="oop4-opts">
+            <button class="option-btn" onclick="selectOption('oop4', 'A', this)">A) O(1)</button>
+            <button class="option-btn" onclick="selectOption('oop4', 'B', this)">B) O(log n)</button>
+            <button class="option-btn" onclick="selectOption('oop4', 'C', this)">C) O(n)</button>
+            <button class="option-btn" onclick="selectOption('oop4', 'D', this)">D) O(n log n)</button>
+        </div>
+
+        <p style="margin-top: 15px;"><strong>Q5:</strong> How do you dynamically allocate memory for an array of 10 integers in C?</p>
+        <div class="options-grid" id="oop5-opts">
+            <button class="option-btn" onclick="selectOption('oop5', 'A', this)">A) int *arr = (int*)malloc(10 * sizeof(int));</button>
+            <button class="option-btn" onclick="selectOption('oop5', 'B', this)">B) int arr = new int[10];</button>
+            <button class="option-btn" onclick="selectOption('oop5', 'C', this)">C) alloc(10, int);</button>
+            <button class="option-btn" onclick="selectOption('oop5', 'D', this)">D) int arr[10] = dynamic;</button>
+        </div>
+    </div>
+
+    <!-- MODULE 6: 5x5 Graphical OS Logo Slide Puzzle -->
+    <div class="module-card">
+        <h3>6. 5x5 OS Logo Graphical Slide Puzzle Challenge</h3>
+        <p>Select an OS logo and complete the 5x5 puzzle effortlessly (Only 2 tiles are swapped for quick completion!).</p>
+        <div class="puzzle-wrapper">
+            <div class="os-selector">
+                <button class="os-sel-btn active" id="btn-tux" onclick="setOSImage('tux')">Linux Tux</button>
+                <button class="os-sel-btn" id="btn-win" onclick="setOSImage('win')">Windows</button>
+                <button class="os-sel-btn" id="btn-mac" onclick="setOSImage('mac')">macOS</button>
+                <button class="os-sel-btn" id="btn-android" onclick="setOSImage('android')">Android</button>
+            </div>
+            <div class="puzzle-preview">
+                <span>Target Goal Preview:</span>
+                <div class="preview-thumb" id="preview-thumb" style="background-image: url('https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1280px-Tux.svg.png');"></div>
+            </div>
+            <div class="puzzle-board" id="puzzle-board"></div>
+            <button class="btn" style="padding: 8px 16px; font-size: 14px;" onclick="resetPuzzle()">Reset Puzzle</button>
+        </div>
+    </div>
+
+    <button class="btn" style="width:100%; margin-top:20px; background:#10b981;" onclick="submitActivity()">Submit Activity & Finish</button>
+</div>
+
+<div class="container hidden" id="gratitude-screen">
+    <h2>Activity Successfully Completed!</h2>
+    <p>Thank you, <span id="fin-name" style="color:#a5dff9; font-weight:bold;"></span>, for participating in the CS Quest & Activity Challenge.</p>
+    <p>Your responses have been successfully recorded and transmitted to the administrative monitoring dashboard. Your final score and rank will be calculated and displayed on the admin podium upon event completion.</p>
+    <div style="background: rgba(15, 23, 42, 0.6); padding: 20px; border-radius: 8px; margin-top: 20px; border: 1px solid #30475e;">
+        <h3 style="color: #10b981; margin-bottom: 10px;">Gratitude & Appreciation</h3>
+        <p>We appreciate your dedication, technical flair, and participation in exploring databases, operating systems, algorithms, and data structures. Keep coding and building innovative solutions!</p>
+    </div>
+</div>
+
+<script>
+    let participant = { name: '', reg: '', startTime: 0, timeSpent: 0 };
+    let answers = { 
+        m1: '', m2: '', m3: '', m4: '', m5: '', 
+        c1: '', c2: '', c3: '', c4: '', c5: '', 
+        os1: '', os2: '', os3: '', os4: '', os5: '', 
+        db1: '', db2: '', db3: '', db4: '', db5: '', 
+        oop1: '', oop2: '', oop3: '', oop4: '', oop5: '' 
+    };
+    let timerInterval = null;
+    let isSubmitted = false; // Permanent lock post-submission
+
+    const osImages = {
+        tux: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Tux.svg/1280px-Tux.svg.png',
+        win: 'https://banner2.cleanpng.com/20180324/jye/av08c8apx.webp',
+        mac: 'https://img.icons8.com/color/1200/mac-os-logo.jpg',
+        android: 'https://uxwing.com/wp-content/themes/uxwing/download/brands-and-social-media/android-robot-bot-icon.svg'
+    };
+    let currentOS = 'tux';
+    
+    let puzzleState = [];
+    function initDefaultPuzzleState() {
+        puzzleState = [];
+        for(let i=0; i<24; i++) puzzleState.push(i);
+        puzzleState.push(23);
+        puzzleState[23] = 24;
+        puzzleState[24] = '';
+    }
+
+    function startChallenge() {
+        const name = document.getElementById('p-name').value.trim();
+        const reg = document.getElementById('p-reg').value.trim();
+        if(!name || !reg) {
+            alert('Please enter both your Full Name and College Register Number.');
+            return;
+        }
+        participant.name = name;
+        participant.reg = reg;
+        participant.startTime = Date.now();
+        isSubmitted = false;
+
+        document.getElementById('disp-name').innerText = name;
+        document.getElementById('reg-screen').classList.add('hidden');
+        document.getElementById('game-screen').classList.remove('hidden');
+
+        let liveList = JSON.parse(localStorage.getItem('cs_live_participants') || '[]');
+        liveList.push({ name, reg, status: 'Active', violations: 0, score: 0, timeTaken: '00:00' });
+        localStorage.setItem('cs_live_participants', JSON.stringify(liveList));
+
+        startTimer();
+        initDefaultPuzzleState();
+        initPuzzle();
+        initTabGuardian();
+    }
+
+    function startTimer() {
+        let timeLeft = 30 * 60;
+        timerInterval = setInterval(() => {
+            if(isSubmitted) return;
+            let m = Math.floor(timeLeft / 60);
+            let s = timeLeft % 60;
+            document.getElementById('timer').innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+            participant.timeSpent = (30 * 60) - timeLeft;
+            if(timeLeft <= 0) {
+                clearInterval(timerInterval);
+                submitActivity();
+            }
+            timeLeft--;
+        }, 1000);
+    }
+
+    function initTabGuardian() {
+        document.addEventListener('visibilitychange', () => {
+            if(document.hidden && !isSubmitted) {
+                triggerDisqualification("Session Terminated");
+            }
+        });
+        window.addEventListener('blur', () => {
+            if(!isSubmitted) {
+                triggerDisqualification("Session Terminated");
+            }
+        });
+    }
+
+    function triggerDisqualification(reason) {
+        if(isSubmitted) return;
+        clearInterval(timerInterval);
+        let liveList = JSON.parse(localStorage.getItem('cs_live_participants') || '[]');
+        let p = liveList.find(x => x.reg === participant.reg);
+        if(p) {
+            p.status = 'Disqualified';
+            localStorage.setItem('cs_live_participants', JSON.stringify(liveList));
+        }
+        document.body.innerHTML = `<div style="max-width:600px; margin: 100px auto; background:#162447; padding:40px; border-radius:12px; text-align:center; color:white; border:2px solid #e43f5a;">
+            <h2 style="color:#e43f5a; margin-bottom:15px;">Session Terminated</h2>
+            <p style="margin-top:15px; color:#a5dff9;">Your participation has been logged as disqualified on the admin dashboard.</p>
+        </div>`;
+    }
+
+    function selectOption(category, val, btnElem) {
+        answers[category] = val;
+        let parent = btnElem.parentElement;
+        Array.from(parent.children).forEach(b => b.classList.remove('selected'));
+        btnElem.classList.add('selected');
+    }
+
+    function setOSImage(osKey) {
+        currentOS = osKey;
+        ['tux', 'win', 'mac', 'android'].forEach(k => {
+            document.getElementById(`btn-${k}`).classList.remove('active');
+        });
+        document.getElementById(`btn-${osKey}`).classList.add('active');
+        document.getElementById('preview-thumb').style.backgroundImage = `url('${osImages[osKey]}')`;
+        resetPuzzle();
+    }
+
+    function initPuzzle() {
+        renderPuzzle();
+    }
+
+    function resetPuzzle() {
+        initDefaultPuzzleState();
+        renderPuzzle();
+    }
+
+    function renderPuzzle() {
+        const board = document.getElementById('puzzle-board');
+        board.innerHTML = '';
+        let imageUrl = osImages[currentOS];
+
+        puzzleState.forEach((tileVal, idx) => {
+            let tile = document.createElement('div');
+            tile.className = `puzzle-tile ${tileVal === '' ? 'empty' : ''}`;
+            
+            if(tileVal !== '') {
+                let row = Math.floor(tileVal / 5);
+                let col = tileVal % 5;
+                tile.style.backgroundImage = `url('${imageUrl}')`;
+                tile.style.backgroundPosition = `-${col * 55}px -${row * 55}px`;
+            }
+            
+            tile.onclick = () => moveTile(idx);
+            board.appendChild(tile);
+        });
+    }
+
+    function moveTile(idx) {
+        let emptyIdx = puzzleState.indexOf('');
+        let validMoves = [emptyIdx - 1, emptyIdx + 1, emptyIdx - 5, emptyIdx + 5];
+        if((emptyIdx % 5 === 4 && idx % 5 === 0) || (emptyIdx % 5 === 0 && idx % 5 === 4)) return;
+        
+        if(validMoves.includes(idx)) {
+            puzzleState[emptyIdx] = puzzleState[idx];
+            puzzleState[idx] = '';
+            renderPuzzle();
+        }
+    }
+
+    function submitActivity() {
+        if(isSubmitted) return;
+        isSubmitted = true; // Lock session permanently against late tab-switch triggers
+        alert("Your answers are submitted!");
+        clearInterval(timerInterval);
+        
+        // Collect Match answers
+        answers.m1 = document.getElementById('m1').value;
+        answers.m2 = document.getElementById('m2').value;
+        answers.m3 = document.getElementById('m3').value;
+        answers.m4 = document.getElementById('m4').value;
+        answers.m5 = document.getElementById('m5').value;
+
+        // Blind score calculation (Total 27 possible marks: 5 match + 5 C err + 5 OS + 5 DBMS + 5 OOP + 2 Puzzle)
+        let score = 0;
+        if(answers.m1 === 'B') score++;
+        if(answers.m2 === 'A') score++;
+        if(answers.m3 === 'C') score++;
+        if(answers.m4 === 'D') score++;
+        if(answers.m5 === 'E') score++;
+
+        if(answers.c1 === 'B') score++;
+        if(answers.c2 === 'B') score++;
+        if(answers.c3 === 'A') score++;
+        if(answers.c4 === 'B') score++;
+        if(answers.c5 === 'A') score++;
+
+        if(answers.os1 === 'Linux') score++;
+        if(answers.os2 === 'Windows') score++;
+        if(answers.os3 === 'macOS') score++;
+        if(answers.os4 === 'Android') score++;
+        if(answers.os5 === 'FreeBSD') score++;
+
+        if(answers.db1 === 'A') score++;
+        if(answers.db2 === 'A') score++;
+        if(answers.db3 === 'A') score++;
+        if(answers.db4 === 'A') score++;
+        if(answers.db5 === 'A') score++;
+
+        if(answers.oop1 === 'B') score++;
+        if(answers.oop2 === 'A') score++;
+        if(answers.oop3 === 'B') score++;
+        if(answers.oop4 === 'A') score++;
+        if(answers.oop5 === 'A') score++;
+        
+        let solvedArr = [];
+        for(let i=0; i<24; i++) solvedArr.push(i);
+        solvedArr.push('');
+        let puzzleSolved = JSON.stringify(puzzleState) === JSON.stringify(solvedArr);
+        if(puzzleSolved) score += 2;
+
+        let timeStr = `${Math.floor(participant.timeSpent / 60)}m ${participant.timeSpent % 60}s`;
+
+        let liveList = JSON.parse(localStorage.getItem('cs_live_participants') || '[]');
+        let p = liveList.find(x => x.reg === participant.reg);
+        if(p) {
+            p.status = 'Completed';
+            p.score = score;
+            p.timeTaken = timeStr;
+            localStorage.setItem('cs_live_participants', JSON.stringify(liveList));
+        }
+
+        let results = JSON.parse(localStorage.getItem('cs_completed_submissions') || '[]');
+        results.push({ name: participant.name, reg: participant.reg, score: score, time: timeStr, rawTime: participant.timeSpent });
+        localStorage.setItem('cs_completed_submissions', JSON.stringify(results));
+
+        document.getElementById('game-screen').classList.add('hidden');
+        document.getElementById('fin-name').innerText = participant.name;
+        document.getElementById('gratitude-screen').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
